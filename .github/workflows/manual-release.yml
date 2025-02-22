@@ -1,0 +1,86 @@
+name: Manual Release Creation
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_name:
+        description: 'Title of the release'
+        required: true
+      tag_name:
+        description: 'Tag for the release (e.g., v1.0.0)'
+        required: true
+      release_notes:
+        description: 'Release notes or comments'
+        required: false
+      target_folder:
+        description: 'Path to the folder to be zipped and uploaded'
+        required: true
+
+jobs:
+  create_release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      - name: Validate and sanitize inputs
+        id: validate_sanitize
+        run: |
+          # Validate release_name
+          if [ -z "${{ github.event.inputs.release_name }}" ]; then
+            echo "Error: Release name is required."
+            exit 1
+          fi
+
+          # Sanitize tag_name by replacing spaces with hyphens
+          sanitized_tag_name="${{ github.event.inputs.tag_name// /- }}"
+
+          # Validate sanitized_tag_name (simple regex for semantic versioning)
+          if [[ ! "$sanitized_tag_name" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9._-]+)?$ ]]; then
+            echo "Error: Tag name must follow semantic versioning (e.g., v1.0.0 or v1.0.0-beta)."
+            exit 1
+          fi
+
+          # Validate target_folder
+          if [ ! -d "${{ github.event.inputs.target_folder }}" ]; then
+            echo "Error: Target folder '${{ github.event.inputs.target_folder }}' does not exist."
+            exit 1
+          fi
+
+          # Set sanitized tag name as an environment variable
+          echo "sanitized_tag_name=$sanitized_tag_name" >> $GITHUB_ENV
+
+      - name: Set up variables
+        id: setup_vars
+        run: |
+          REPO_NAME=$(basename $GITHUB_REPOSITORY)
+          ZIP_NAME="${REPO_NAME}_${sanitized_tag_name}.zip"
+          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+
+      - name: Create zip archive
+        run: |
+          cd ${{ github.event.inputs.target_folder }}
+          zip -r "${{ env.ZIP_NAME }}" .
+        if: steps.validate_sanitize.outcome == 'success'
+
+      - name: Create draft release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ env.sanitized_tag_name }}
+          release_name: ${{ github.event.inputs.release_name }}
+          body: ${{ github.event.inputs.release_notes }}
+          draft: true
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+        if: steps.validate_sanitize.outcome == 'success'
+
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.event.inputs.target_folder }}/${{ env.ZIP_NAME }}
+          asset_name: ${{ env.ZIP_NAME }}
+          asset_content_type: application/zip
+        if: steps.validate_sanitize.outcome == 'success'
