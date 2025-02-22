@@ -1,0 +1,24 @@
+Modified GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+(Non-Commercial Use Only)
+
+[Include the same copyright section as usual]
+
+Preamble
+The GNU General Public License is a free, copyleft license for software and other kinds of works. This version includes an additional restriction: commercial use of this work is prohibited. This restriction ensures that the work remains freely available for personal, educational, and non-commercial use, but may not be used for commercial purposes or profit-making activities.
+
+Terms and Conditions
+The following terms modify and supplement the standard GNU GPL v3 License:
+
+Non-Commercial Use:
+You may not use the Program for commercial purposes. "Commercial purposes" include any activity intended for financial gain, including but not limited to selling, licensing, or otherwise profiting from the Program or any modifications of the Program. This restriction is intended to preserve the non-commercial nature of this work.
+
+Permitted Uses:
+You are free to use, modify, and distribute the Program for personal, educational, and non-commercial purposes, provided that you include a copy of this modified license along with the Program. This License does not permit you to use the Program in any way that competes commercially with the original or modified version of the Program.
+
+Distribution and Modification:
+You may distribute and modify the Program, but you must ensure that any distributed copies or derivative works comply with this modified license, and you must include a prominent notice stating that commercial use is prohibited under this License.
+
+No Warranty and Limitation of Liability:
+(As per the original GPLv3 text)
+
