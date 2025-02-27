@@ -41,11 +41,13 @@
             Close_Button = new Button();
             BackUp_NotifyIcon = new NotifyIcon(components);
             BackupSysTray_Menu = new ContextMenuStrip(components);
+            ToolStripOpenForm_MenuItem = new ToolStripMenuItem();
             ToolStripRunBackup_MenuItem = new ToolStripMenuItem();
             LastBackup_MenuItem = new ToolStripMenuItem();
             LastBackup_toolStrip_TextBox = new ToolStripTextBox();
             NextBackup_MenuItem = new ToolStripMenuItem();
             NextBackup_toolStrip_TextBox = new ToolStripTextBox();
+            ToolStripExit_MenuItem = new ToolStripMenuItem();
             pictureBox1 = new PictureBox();
             RunBack_Button = new Button();
             Backup_Timer = new System.Windows.Forms.Timer(components);
@@ -65,7 +67,8 @@
             // 
             // RepoLocation_Text
             // 
-            RepoLocation_Text.Location = new Point(23, 47);
+            RepoLocation_Text.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            RepoLocation_Text.Location = new Point(23, 34);
             RepoLocation_Text.Name = "RepoLocation_Text";
             RepoLocation_Text.Size = new Size(257, 23);
             RepoLocation_Text.TabIndex = 0;
@@ -75,7 +78,7 @@
             // 
             RepoLocation_Label.AutoSize = true;
             RepoLocation_Label.ForeColor = Color.White;
-            RepoLocation_Label.Location = new Point(23, 29);
+            RepoLocation_Label.Location = new Point(23, 16);
             RepoLocation_Label.Name = "RepoLocation_Label";
             RepoLocation_Label.Size = new Size(200, 15);
             RepoLocation_Label.TabIndex = 1;
@@ -83,7 +86,8 @@
             // 
             // OpenFileExpl_Button
             // 
-            OpenFileExpl_Button.Location = new Point(286, 46);
+            OpenFileExpl_Button.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            OpenFileExpl_Button.Location = new Point(286, 33);
             OpenFileExpl_Button.Name = "OpenFileExpl_Button";
             OpenFileExpl_Button.Size = new Size(26, 23);
             OpenFileExpl_Button.TabIndex = 2;
@@ -96,7 +100,7 @@
             BackupInterval_Combo.DropDownStyle = ComboBoxStyle.DropDownList;
             BackupInterval_Combo.FormattingEnabled = true;
             BackupInterval_Combo.Items.AddRange(new object[] { "Daily (Default)", "Week Days", "Weekly", "Monthly" });
-            BackupInterval_Combo.Location = new Point(23, 106);
+            BackupInterval_Combo.Location = new Point(23, 93);
             BackupInterval_Combo.Name = "BackupInterval_Combo";
             BackupInterval_Combo.Size = new Size(135, 23);
             BackupInterval_Combo.TabIndex = 3;
@@ -106,7 +110,7 @@
             // 
             BackupInterval_Label.AutoSize = true;
             BackupInterval_Label.ForeColor = Color.White;
-            BackupInterval_Label.Location = new Point(23, 88);
+            BackupInterval_Label.Location = new Point(23, 75);
             BackupInterval_Label.Name = "BackupInterval_Label";
             BackupInterval_Label.Size = new Size(88, 15);
             BackupInterval_Label.TabIndex = 4;
@@ -115,17 +119,18 @@
             // BackupTime_Picker
             // 
             BackupTime_Picker.Format = DateTimePickerFormat.Time;
-            BackupTime_Picker.Location = new Point(23, 168);
+            BackupTime_Picker.Location = new Point(23, 155);
             BackupTime_Picker.Name = "BackupTime_Picker";
             BackupTime_Picker.ShowUpDown = true;
             BackupTime_Picker.Size = new Size(135, 23);
             BackupTime_Picker.TabIndex = 5;
+            BackupTime_Picker.ValueChanged += BackupTime_Picker_ValueChanged;
             // 
             // BackupTime_Label
             // 
             BackupTime_Label.AutoSize = true;
             BackupTime_Label.ForeColor = Color.White;
-            BackupTime_Label.Location = new Point(23, 150);
+            BackupTime_Label.Location = new Point(23, 137);
             BackupTime_Label.Name = "BackupTime_Label";
             BackupTime_Label.Size = new Size(127, 15);
             BackupTime_Label.TabIndex = 6;
@@ -133,6 +138,7 @@
             // 
             // OpenLog_Button
             // 
+            OpenLog_Button.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             OpenLog_Button.Location = new Point(23, 345);
             OpenLog_Button.Name = "OpenLog_Button";
             OpenLog_Button.Size = new Size(135, 23);
@@ -143,6 +149,7 @@
             // 
             // Close_Button
             // 
+            Close_Button.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             Close_Button.Location = new Point(207, 345);
             Close_Button.Name = "Close_Button";
             Close_Button.Size = new Size(97, 23);
@@ -157,12 +164,20 @@
             BackUp_NotifyIcon.Icon = (Icon)resources.GetObject("BackUp_NotifyIcon.Icon");
             BackUp_NotifyIcon.Text = "Github Auto Backup";
             BackUp_NotifyIcon.Visible = true;
+            BackUp_NotifyIcon.DoubleClick += BackUp_NotifyIcon_DoubleClick;
             // 
             // BackupSysTray_Menu
             // 
-            BackupSysTray_Menu.Items.AddRange(new ToolStripItem[] { ToolStripRunBackup_MenuItem, LastBackup_MenuItem, NextBackup_MenuItem });
+            BackupSysTray_Menu.Items.AddRange(new ToolStripItem[] { ToolStripOpenForm_MenuItem, ToolStripRunBackup_MenuItem, LastBackup_MenuItem, NextBackup_MenuItem, ToolStripExit_MenuItem });
             BackupSysTray_Menu.Name = "BackupSysTray_Menu";
-            BackupSysTray_Menu.Size = new Size(166, 70);
+            BackupSysTray_Menu.Size = new Size(166, 114);
+            // 
+            // ToolStripOpenForm_MenuItem
+            // 
+            ToolStripOpenForm_MenuItem.Name = "ToolStripOpenForm_MenuItem";
+            ToolStripOpenForm_MenuItem.Size = new Size(165, 22);
+            ToolStripOpenForm_MenuItem.Text = "Settings";
+            ToolStripOpenForm_MenuItem.Click += ToolStripOpenForm_MenuItem_Click;
             // 
             // ToolStripRunBackup_MenuItem
             // 
@@ -181,7 +196,9 @@
             // LastBackup_toolStrip_TextBox
             // 
             LastBackup_toolStrip_TextBox.Name = "LastBackup_toolStrip_TextBox";
+            LastBackup_toolStrip_TextBox.ReadOnly = true;
             LastBackup_toolStrip_TextBox.Size = new Size(100, 23);
+            LastBackup_toolStrip_TextBox.Click += LastBackup_toolStrip_TextBox_Click;
             // 
             // NextBackup_MenuItem
             // 
@@ -193,12 +210,22 @@
             // NextBackup_toolStrip_TextBox
             // 
             NextBackup_toolStrip_TextBox.Name = "NextBackup_toolStrip_TextBox";
+            NextBackup_toolStrip_TextBox.ReadOnly = true;
             NextBackup_toolStrip_TextBox.Size = new Size(100, 23);
+            NextBackup_toolStrip_TextBox.Click += NextBackup_toolStrip_TextBox_Click;
+            // 
+            // ToolStripExit_MenuItem
+            // 
+            ToolStripExit_MenuItem.Name = "ToolStripExit_MenuItem";
+            ToolStripExit_MenuItem.Size = new Size(165, 22);
+            ToolStripExit_MenuItem.Text = "Exit";
+            ToolStripExit_MenuItem.Click += ToolStripExit_MenuItem_Click;
             // 
             // pictureBox1
             // 
-            pictureBox1.Image = Properties.Resources.Small_Blum_Logo1;
-            pictureBox1.Location = new Point(180, 88);
+            pictureBox1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            pictureBox1.Image = Properties.Resources.GITHUB_AUTO_BACKUP_Logo;
+            pictureBox1.Location = new Point(180, 75);
             pictureBox1.Name = "pictureBox1";
             pictureBox1.Size = new Size(124, 103);
             pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
@@ -207,7 +234,8 @@
             // 
             // RunBack_Button
             // 
-            RunBack_Button.Location = new Point(23, 269);
+            RunBack_Button.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            RunBack_Button.Location = new Point(23, 271);
             RunBack_Button.Name = "RunBack_Button";
             RunBack_Button.Size = new Size(135, 52);
             RunBack_Button.TabIndex = 10;
@@ -221,7 +249,8 @@
             // 
             // LastBackup_Text
             // 
-            LastBackup_Text.Location = new Point(23, 228);
+            LastBackup_Text.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            LastBackup_Text.Location = new Point(23, 221);
             LastBackup_Text.Name = "LastBackup_Text";
             LastBackup_Text.ReadOnly = true;
             LastBackup_Text.Size = new Size(135, 23);
@@ -230,9 +259,10 @@
             // 
             // LastBackup_Label
             // 
+            LastBackup_Label.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             LastBackup_Label.AutoSize = true;
             LastBackup_Label.ForeColor = Color.White;
-            LastBackup_Label.Location = new Point(23, 210);
+            LastBackup_Label.Location = new Point(23, 203);
             LastBackup_Label.Name = "LastBackup_Label";
             LastBackup_Label.Size = new Size(70, 15);
             LastBackup_Label.TabIndex = 12;
@@ -240,7 +270,8 @@
             // 
             // NextBackup_Text
             // 
-            NextBackup_Text.Location = new Point(180, 228);
+            NextBackup_Text.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            NextBackup_Text.Location = new Point(180, 221);
             NextBackup_Text.Name = "NextBackup_Text";
             NextBackup_Text.ReadOnly = true;
             NextBackup_Text.Size = new Size(124, 23);
@@ -248,9 +279,10 @@
             // 
             // NextBackup_Label
             // 
+            NextBackup_Label.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             NextBackup_Label.AutoSize = true;
             NextBackup_Label.ForeColor = Color.White;
-            NextBackup_Label.Location = new Point(180, 210);
+            NextBackup_Label.Location = new Point(180, 203);
             NextBackup_Label.Name = "NextBackup_Label";
             NextBackup_Label.Size = new Size(73, 15);
             NextBackup_Label.TabIndex = 14;
@@ -276,10 +308,11 @@
             // 
             // panel1
             // 
+            panel1.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             panel1.BorderStyle = BorderStyle.FixedSingle;
             panel1.Controls.Add(BackupStatus_Label);
             panel1.Controls.Add(BackupStatus_Text);
-            panel1.Location = new Point(176, 268);
+            panel1.Location = new Point(176, 270);
             panel1.Name = "panel1";
             panel1.Size = new Size(135, 52);
             panel1.TabIndex = 17;
@@ -297,6 +330,8 @@
             // 
             // Form1
             // 
+            AutoScaleDimensions = new SizeF(96F, 96F);
+            AutoScaleMode = AutoScaleMode.Dpi;
             BackColor = Color.FromArgb(75, 87, 95);
             ClientSize = new Size(324, 380);
             Controls.Add(RunBack_Button);
@@ -315,11 +350,12 @@
             Controls.Add(OpenFileExpl_Button);
             Controls.Add(RepoLocation_Label);
             Controls.Add(RepoLocation_Text);
-            FormBorderStyle = FormBorderStyle.Fixed3D;
+            FormBorderStyle = FormBorderStyle.FixedSingle;
             HelpButton = true;
             Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
             MinimizeBox = false;
+            MinimumSize = new Size(340, 419);
             Name = "Form1";
             Text = "Github Auto Backup";
             FormClosing += Form1_FormClosing;
@@ -355,7 +391,6 @@
         private Label BackupStatus_Label;
         private Panel panel1;
         private ContextMenuStrip BackupSysTray_Menu;
-        private ToolStripTextBox toolStrip_LastBackup_Text;
         private ToolStripMenuItem ToolStripRunBackup_MenuItem;
         private ToolStripMenuItem LastBackup_MenuItem;
         private ToolStripTextBox LastBackup_toolStrip_TextBox;
@@ -363,5 +398,7 @@
         private ToolStripTextBox NextBackup_toolStrip_TextBox;
         private ToolStripMenuItem nextBackupToolStripMenuItem;
         private ToolStripTextBox toolStripTextBox2;
+        private ToolStripMenuItem ToolStripOpenForm_MenuItem;
+        private ToolStripMenuItem ToolStripExit_MenuItem;
     }
 }

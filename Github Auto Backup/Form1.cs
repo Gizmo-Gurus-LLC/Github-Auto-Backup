@@ -2,6 +2,8 @@ namespace Github_Auto_Backup
 {
     public partial class Form1 : Form
     {
+        private const string FirstRunMessage = "Welcome to Github Auto Backup! This setup runs only once.\n\nGithub Auto Backup will now start automatically on Windows start";
+
         private readonly Dictionary<string, int> backupIntervalMapping = new()
         {
             { "Daily (Default)", 1440 }, // 1440 minutes in a day
@@ -11,11 +13,32 @@ namespace Github_Auto_Backup
         };
 
         private bool isFormLoading = false;
+        private static Form1? form1Instance;
 
         public Form1()
         {
             InitializeComponent();
             BackupInterval_Combo.DropDownStyle = ComboBoxStyle.DropDownList;
+        }
+
+        public static void ShowForm()
+        {
+            if (form1Instance == null || form1Instance.IsDisposed)
+            {
+                form1Instance = new Form1();
+                form1Instance.Show();
+            }
+            else
+            {
+                if (form1Instance.Visible)
+                {
+                    form1Instance.BringToFront();
+                }
+                else
+                {
+                    form1Instance.Show();
+                }
+            }
         }
 
         private void LogAction(string message, bool addNewLines = false, bool includeDateTime = true)
@@ -90,11 +113,28 @@ namespace Github_Auto_Backup
         {
             isFormLoading = true;
 
+            // Check if it's the first run
+            if (Properties.Settings.Default.IsFirstRun)
+            {
+                RunFirstTimeSetup();
+                Properties.Settings.Default.IsFirstRun = false;
+                Properties.Settings.Default.Save();
+            }
+
             RepoLocation_Text.Text = RepoLocation;
             BackupInterval_Combo.Text = BackupInterval;
             BackupTime_Picker.Text = BackupTime;
             LastBackup_Text.Text = LastBackup;
             NextBackup_Text.Text = NextBackup;
+
+            // Check if BackupInterval is null or empty and set a default value if it is
+            if (string.IsNullOrEmpty(BackupInterval))
+            {
+                BackupInterval = "Daily (Default)";
+                Properties.Settings.Default.BackupInterval = BackupInterval;
+                Properties.Settings.Default.Save();
+            }
+
             // Check if BackupStatus is null and set a default value if it is
             if (string.IsNullOrEmpty(BackupStatus))
             {
@@ -118,6 +158,16 @@ namespace Github_Auto_Backup
 
             isFormLoading = false;
         }
+        private void RunFirstTimeSetup()
+        {
+            // Set the default backup interval
+            BackupInterval = "Daily (Default)";
+            Properties.Settings.Default.BackupInterval = BackupInterval;
+            BackupTime = BackupTime_Picker.Value.ToString();
+            Properties.Settings.Default.Save();
+
+            MessageBox.Show(FirstRunMessage, "First Time Setup", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
 
         private void OpenFileExpl_Button_Click(object sender, EventArgs e)
         {
@@ -133,6 +183,15 @@ namespace Github_Auto_Backup
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                // Cancel the default close action
+                e.Cancel = true;
+
+                // Hide the form instead of closing it
+                this.Hide();
+            }
+
             Properties.Settings.Default.RepoLocation = RepoLocation;
             Properties.Settings.Default.BackupInterval = BackupInterval;
             Properties.Settings.Default.BackupTime = BackupTime;
@@ -144,7 +203,8 @@ namespace Github_Auto_Backup
 
         private void Close_Button_Click(object sender, EventArgs e)
         {
-            Close();
+            // Hide the form instead of closing it
+            this.Hide();
         }
 
         private void RepoLocation_Text_TextChanged(object sender, EventArgs e)
@@ -214,12 +274,29 @@ namespace Github_Auto_Backup
 
                     if (!string.IsNullOrEmpty(BackupInterval) && backupIntervalMapping.TryGetValue(BackupInterval, out int intervalMinutes))
                     {
-                        NextBackup = DateTime.Now.AddMinutes(intervalMinutes).ToString();
+                        if (!string.IsNullOrEmpty(BackupTime))
+                        {
+                            DateTime nextBackupTime = DateTime.Parse(BackupTime);
+                            DateTime now = DateTime.Now;
+                            nextBackupTime = new DateTime(now.Year, now.Month, now.Day, nextBackupTime.Hour, nextBackupTime.Minute, nextBackupTime.Second);
+
+                            if (nextBackupTime <= now)
+                            {
+                                nextBackupTime = nextBackupTime.AddMinutes(intervalMinutes);
+                            }
+
+                            NextBackup = nextBackupTime.ToString();
+                        }
+                        else
+                        {
+                            NextBackup = "Unknown";
+                        }
                     }
                     else
                     {
                         NextBackup = "Unknown";
                     }
+
                 }
                 catch (Exception ex)
                 {
@@ -242,7 +319,6 @@ namespace Github_Auto_Backup
             };
             backupThread.Start();
         }
-
 
         private void ProcessRepository(string repoPath)
         {
@@ -350,6 +426,16 @@ namespace Github_Auto_Backup
         {
             LastBackup_Text.Text = LastBackup;
             NextBackup_Text.Text = NextBackup;
+            LastBackup_toolStrip_TextBox.Text = LastBackup;
+            NextBackup_toolStrip_TextBox.Text = NextBackup;
+            if (!string.IsNullOrWhiteSpace(RepoLocation))
+            {
+                RunBack_Button.Enabled = true;
+            }
+            else
+            {
+                RunBack_Button.Enabled = false;
+            }
             if (!string.IsNullOrEmpty(NextBackup) && DateTime.Now > DateTime.Parse(NextBackup))
             {
                 RunBackup();
@@ -383,11 +469,58 @@ namespace Github_Auto_Backup
                 MessageBox.Show($"An error occurred while opening the log file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         private async void ToolStripRunBackup_MenuItem_Click(object sender, EventArgs e)
         {
             await Task.Run(() => RunBackup());
+        }
 
+        private void LastBackup_toolStrip_TextBox_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void NextBackup_toolStrip_TextBox_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void ToolStripOpenForm_MenuItem_Click(object sender, EventArgs e)
+        {
+            Form1.ShowForm();
+        }
+
+        private void ToolStripExit_MenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private void BackupTime_Picker_ValueChanged(object sender, EventArgs e)
+        {
+            DateTime selectedTime = BackupTime_Picker.Value;
+            DateTime now = DateTime.Now;
+
+            // Calculate the next backup time based on the selected time
+            DateTime nextBackupTime = new(now.Year, now.Month, now.Day, selectedTime.Hour, selectedTime.Minute, selectedTime.Second);
+
+            // If the selected time is earlier in the day than the current time, set the next backup to the next day
+            if (nextBackupTime <= now)
+            {
+                nextBackupTime = nextBackupTime.AddDays(1);
+            }
+
+            NextBackup = nextBackupTime.ToString();
+            NextBackup_Text.Text = NextBackup;
+            BackupTime = selectedTime.ToString();
+            Properties.Settings.Default.BackupTime = BackupTime;
+            Properties.Settings.Default.NextBackup = NextBackup;
+            Properties.Settings.Default.Save();
+        }
+
+        private void BackUp_NotifyIcon_DoubleClick(object sender, EventArgs e)
+        {
+            Form1.ShowForm();
         }
     }
 }
+
