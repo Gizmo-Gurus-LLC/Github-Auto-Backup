@@ -60,6 +60,7 @@
             panel1 = new Panel();
             nextBackupToolStripMenuItem = new ToolStripMenuItem();
             toolStripTextBox2 = new ToolStripTextBox();
+            Help_button = new Button();
             BackupSysTray_Menu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             panel1.SuspendLayout();
@@ -141,7 +142,7 @@
             OpenLog_Button.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             OpenLog_Button.Location = new Point(23, 345);
             OpenLog_Button.Name = "OpenLog_Button";
-            OpenLog_Button.Size = new Size(135, 23);
+            OpenLog_Button.Size = new Size(97, 23);
             OpenLog_Button.TabIndex = 7;
             OpenLog_Button.Text = "Open Log File";
             OpenLog_Button.UseVisualStyleBackColor = true;
@@ -328,12 +329,24 @@
             toolStripTextBox2.Name = "toolStripTextBox2";
             toolStripTextBox2.Size = new Size(100, 23);
             // 
+            // Help_button
+            // 
+            Help_button.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            Help_button.Location = new Point(126, 345);
+            Help_button.Name = "Help_button";
+            Help_button.Size = new Size(32, 23);
+            Help_button.TabIndex = 18;
+            Help_button.Text = "?";
+            Help_button.UseVisualStyleBackColor = true;
+            Help_button.Click += Help_button_Click;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
             BackColor = Color.FromArgb(75, 87, 95);
             ClientSize = new Size(324, 380);
+            Controls.Add(Help_button);
             Controls.Add(RunBack_Button);
             Controls.Add(panel1);
             Controls.Add(NextBackup_Label);
@@ -400,5 +413,6 @@
         private ToolStripTextBox toolStripTextBox2;
         private ToolStripMenuItem ToolStripOpenForm_MenuItem;
         private ToolStripMenuItem ToolStripExit_MenuItem;
+        private Button Help_button;
     }
 }

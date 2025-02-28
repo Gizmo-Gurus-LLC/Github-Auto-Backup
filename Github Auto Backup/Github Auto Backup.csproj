@@ -19,11 +19,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="Github-Auto-Backup-Manual.pdf" />
 	  <None Remove="Resources\GITHUB AUTO BACKUP Logo.png" />
 	  <None Remove="Resources\Small Blum Logo1.png" />
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Content Include="Github-Auto-Backup-Manual.pdf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
 	  <Content Include="github_auto_backup_aUt_icon.ico" />
 	</ItemGroup>
 
