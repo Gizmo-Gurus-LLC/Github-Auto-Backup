@@ -40,12 +40,6 @@ GitHub Auto Backup is a lightweight Windows application that automatically backs
 - Won’t interfere with your workflow—runs quietly in the background  
 - Won’t upload unintended changes—keeps your repositories under control  
 
-## License  
-GitHub Auto Backup is free for personal and open-source use. Feel free to fork it, contribute, and customize it. However, commercial use is not allowed.  
-
-**© 2025 Blum-Novotest, Inc.**  
-This software is provided "as is" with no guarantees. Use at your own risk.  
-
 ## Want to Contribute?  
 Fork the repo, submit issues, or improve the code—your contributions are welcome!  
 
@@ -53,3 +47,8 @@ Fork the repo, submit issues, or improve the code—your contributions are welco
 
 This project is licensed under the GNU General Public License v3, with an additional non-commercial use restriction.
 See the `LICENSE-NC.txt` file for more details.
+## License  
+GitHub Auto Backup is free for personal and open-source use. Feel free to fork it, contribute, and customize it. However, commercial use is not allowed.  
+
+**© 2025 Gizmo Gurus LLC**  
+This software is provided "as is" with no guarantees. Use at your own risk.  
