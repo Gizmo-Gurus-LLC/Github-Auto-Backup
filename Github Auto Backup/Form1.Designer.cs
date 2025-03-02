@@ -225,7 +225,7 @@
             // pictureBox1
             // 
             pictureBox1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            pictureBox1.Image = Properties.Resources.GITHUB_AUTO_BACKUP_Logo;
+            pictureBox1.Image = Properties.Resources.GITHUB_AUTO_BACKUP_Logo1;
             pictureBox1.Location = new Point(180, 75);
             pictureBox1.Name = "pictureBox1";
             pictureBox1.Size = new Size(124, 103);

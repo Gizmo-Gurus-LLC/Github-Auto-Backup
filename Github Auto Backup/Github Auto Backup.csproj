@@ -15,7 +15,7 @@
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>MyKey.snk</AssemblyOriginatorKeyFile>
 		<DelaySign>True</DelaySign>
-		<ApplicationIcon>github_auto_backup_aUt_icon.ico</ApplicationIcon>
+		<ApplicationIcon>GITHUB AUTO BACKUP Logo.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -28,7 +28,7 @@
 	  <Content Include="Github-Auto-Backup-Manual.pdf">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="github_auto_backup_aUt_icon.ico" />
+	  <Content Include="GITHUB AUTO BACKUP Logo.ico" />
 	</ItemGroup>
 
 	<ItemGroup>
