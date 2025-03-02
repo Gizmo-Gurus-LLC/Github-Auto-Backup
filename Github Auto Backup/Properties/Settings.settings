@@ -6,7 +6,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="BackupInterval" Type="System.String" Scope="User">
-      <Value Profile="(Default)">0</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="BackupTime" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
@@ -19,6 +19,12 @@
     </Setting>
     <Setting Name="BackupStatus" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="IsFirstRun" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="FormVisibility" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Visible</Value>
     </Setting>
   </Settings>
 </SettingsFile>

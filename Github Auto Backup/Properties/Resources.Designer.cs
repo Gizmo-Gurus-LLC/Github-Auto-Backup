@@ -63,9 +63,9 @@ namespace Github_Auto_Backup.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Small_Blum_Logo1 {
+        internal static System.Drawing.Bitmap GITHUB_AUTO_BACKUP_Logo1 {
             get {
-                object obj = ResourceManager.GetObject("Small Blum Logo1", resourceCulture);
+                object obj = ResourceManager.GetObject("GITHUB AUTO BACKUP Logo1", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

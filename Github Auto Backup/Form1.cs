@@ -2,6 +2,8 @@ namespace Github_Auto_Backup
 {
     public partial class Form1 : Form
     {
+        private const string FirstRunMessage = "Welcome to Github Auto Backup! This setup runs only once.\n\nGithub Auto Backup will now start automatically on Windows start";
+
         private readonly Dictionary<string, int> backupIntervalMapping = new()
         {
             { "Daily (Default)", 1440 }, // 1440 minutes in a day
@@ -11,6 +13,16 @@ namespace Github_Auto_Backup
         };
 
         private bool isFormLoading = false;
+        private static Form1? form1Instance;
+
+        private static class BackupStatusConstants
+        {
+            public const string Running = "Running";
+            public const string CompletedSuccess = "Completed: Success";
+            public const string CompletedError = "Completed: ERROR";
+            public const string CompletedWarning = "Completed: Warning";
+            public const string NotRunning = "Not Running";
+        }
 
         public Form1()
         {
@@ -18,10 +30,37 @@ namespace Github_Auto_Backup
             BackupInterval_Combo.DropDownStyle = ComboBoxStyle.DropDownList;
         }
 
+        public static void ShowForm()
+        {
+            if (form1Instance == null || form1Instance.IsDisposed)
+            {
+                form1Instance = new Form1();
+                form1Instance.Show();
+            }
+            else
+            {
+                if (form1Instance.Visible)
+                {
+                    form1Instance.BringToFront();
+                }
+                else
+                {
+                    form1Instance.Show();
+                }
+            }
+        }
+
         private void LogAction(string message, bool addNewLines = false, bool includeDateTime = true)
         {
             try
             {
+                // Ensure the log directory exists
+                string? logDirectory = Path.GetDirectoryName(logFilePath);
+                if (logDirectory != null && !Directory.Exists(logDirectory))
+                {
+                    Directory.CreateDirectory(logDirectory);
+                }
+
                 using var writer = new StreamWriter(logFilePath, true);
                 if (addNewLines)
                 {
@@ -48,6 +87,7 @@ namespace Github_Auto_Backup
             }
         }
 
+
         private void UpdateBackupStatus(string status)
         {
             if (BackupStatus_Text.InvokeRequired)
@@ -59,26 +99,26 @@ namespace Github_Auto_Backup
             BackupStatus = status;
             switch (status)
             {
-                case "Running":
+                case BackupStatusConstants.Running:
                     BackupStatus_Text.BackColor = System.Drawing.Color.Gray;
                     break;
-                case "Completed: Success":
+                case BackupStatusConstants.CompletedSuccess:
                     BackupStatus_Text.BackColor = System.Drawing.Color.Green;
                     break;
-                case "Completed: ERROR":
+                case BackupStatusConstants.CompletedError:
                     BackupStatus_Text.BackColor = System.Drawing.Color.Red;
                     break;
-                case "Completed: Warning":
+                case BackupStatusConstants.CompletedWarning:
                     BackupStatus_Text.BackColor = System.Drawing.Color.Yellow;
                     break;
-                case "Not Running":
+                case BackupStatusConstants.NotRunning:
                     BackupStatus_Text.BackColor = System.Drawing.Color.Gray;
                     break;
             }
             BackupStatus_Text.Text = BackupStatus;
         }
 
-        public string logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Github Auto Backup.log");
+        public string logFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Github Auto Backup", "Github Auto Backup.log");
         public string? RepoLocation = Properties.Settings.Default.RepoLocation;
         public string? BackupInterval = Properties.Settings.Default.BackupInterval;
         public string? LastBackup = Properties.Settings.Default.LastBackup;
@@ -90,15 +130,42 @@ namespace Github_Auto_Backup
         {
             isFormLoading = true;
 
+            // Check if it's the first run
+            if (Properties.Settings.Default.IsFirstRun)
+            {
+                RunFirstTimeSetup();
+                Properties.Settings.Default.IsFirstRun = false;
+                Properties.Settings.Default.Save();
+            }
+
+            // Apply the saved form visibility state
+            if (Properties.Settings.Default.FormVisibility == "Hidden")
+            {
+                this.Hide();
+            }
+            else
+            {
+                this.Show();
+            }
+
             RepoLocation_Text.Text = RepoLocation;
             BackupInterval_Combo.Text = BackupInterval;
             BackupTime_Picker.Text = BackupTime;
             LastBackup_Text.Text = LastBackup;
             NextBackup_Text.Text = NextBackup;
+
+            // Check if BackupInterval is null or empty and set a default value if it is
+            if (string.IsNullOrEmpty(BackupInterval))
+            {
+                BackupInterval = "Daily (Default)";
+                Properties.Settings.Default.BackupInterval = BackupInterval;
+                Properties.Settings.Default.Save();
+            }
+
             // Check if BackupStatus is null and set a default value if it is
             if (string.IsNullOrEmpty(BackupStatus))
             {
-                BackupStatus = "Not Running";
+                BackupStatus = BackupStatusConstants.NotRunning;
             }
             BackupStatus_Text.Text = BackupStatus;
             UpdateBackupStatus(BackupStatus); // Call UpdateBackupStatus with BackupStatus
@@ -118,6 +185,16 @@ namespace Github_Auto_Backup
 
             isFormLoading = false;
         }
+        private void RunFirstTimeSetup()
+        {
+            // Set the default backup interval
+            BackupInterval = "Daily (Default)";
+            Properties.Settings.Default.BackupInterval = BackupInterval;
+            BackupTime = BackupTime_Picker.Value.ToString();
+            Properties.Settings.Default.Save();
+
+            //MessageBox.Show(FirstRunMessage, "First Time Setup", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
 
         private void OpenFileExpl_Button_Click(object sender, EventArgs e)
         {
@@ -133,6 +210,24 @@ namespace Github_Auto_Backup
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                // Cancel the default close action
+                e.Cancel = true;
+
+                // Hide the form instead of closing it
+                Properties.Settings.Default.FormVisibility = "Hidden";
+                Properties.Settings.Default.Save();
+                this.Hide();
+            }
+
+            SaveSettings();
+            //Properties.Settings.Default.FormVisibility = this.Visible ? "Visible" : "Hidden";
+            //Properties.Settings.Default.Save();
+        }
+
+        private void SaveSettings()
+        {
             Properties.Settings.Default.RepoLocation = RepoLocation;
             Properties.Settings.Default.BackupInterval = BackupInterval;
             Properties.Settings.Default.BackupTime = BackupTime;
@@ -144,7 +239,10 @@ namespace Github_Auto_Backup
 
         private void Close_Button_Click(object sender, EventArgs e)
         {
-            Close();
+            // Hide the form instead of closing it
+            this.Hide();
+            Properties.Settings.Default.FormVisibility = "Hidden";
+            Properties.Settings.Default.Save();
         }
 
         private void RepoLocation_Text_TextChanged(object sender, EventArgs e)
@@ -172,24 +270,24 @@ namespace Github_Auto_Backup
 
         private async void RunBack_Button_Click(object sender, EventArgs e)
         {
-            await Task.Run(() => RunBackup());
+            await RunBackupAsync();
         }
 
-        private void RunBackup()
+        private async Task RunBackupAsync()
         {
-            Thread backupThread = new(() =>
+            await Task.Run(async () =>
             {
                 try
                 {
                     LogAction("************************************************************", false, false);
                     LogAction("New backup started");
-                    UpdateBackupStatus("Running");
+                    UpdateBackupStatus(BackupStatusConstants.Running);
 
                     if (!string.IsNullOrEmpty(RepoLocation))
                     {
                         if (IsGitRepository(RepoLocation))
                         {
-                            ProcessRepository(RepoLocation);
+                            await ProcessRepositoryAsync(RepoLocation);
                         }
                         else
                         {
@@ -197,7 +295,7 @@ namespace Github_Auto_Backup
                             {
                                 if (IsGitRepository(directory))
                                 {
-                                    ProcessRepository(directory);
+                                    await ProcessRepositoryAsync(directory);
                                 }
                             }
                         }
@@ -205,7 +303,7 @@ namespace Github_Auto_Backup
                     else
                     {
                         LogAction("Repository location is not set.", false, true);
-                        UpdateBackupStatus("Completed: ERROR");
+                        UpdateBackupStatus(BackupStatusConstants.CompletedError);
                     }
 
                     LogAction("Backup Completed", false, true);
@@ -214,55 +312,67 @@ namespace Github_Auto_Backup
 
                     if (!string.IsNullOrEmpty(BackupInterval) && backupIntervalMapping.TryGetValue(BackupInterval, out int intervalMinutes))
                     {
-                        NextBackup = DateTime.Now.AddMinutes(intervalMinutes).ToString();
+                        if (!string.IsNullOrEmpty(BackupTime))
+                        {
+                            DateTime nextBackupTime = DateTime.Parse(BackupTime);
+                            DateTime now = DateTime.Now;
+                            nextBackupTime = new DateTime(now.Year, now.Month, now.Day, nextBackupTime.Hour, nextBackupTime.Minute, nextBackupTime.Second);
+
+                            if (nextBackupTime <= now)
+                            {
+                                nextBackupTime = nextBackupTime.AddMinutes(intervalMinutes);
+                            }
+
+                            NextBackup = nextBackupTime.ToString();
+                        }
+                        else
+                        {
+                            NextBackup = "Unknown";
+                        }
                     }
                     else
                     {
                         NextBackup = "Unknown";
                     }
+
                 }
                 catch (Exception ex)
                 {
                     LogAction($"Error: {ex.Message}", false, true);
-                    UpdateBackupStatus("Completed: Error");
+                    UpdateBackupStatus(BackupStatusConstants.CompletedError);
                 }
-                if (BackupStatus == "Completed: Warning")
+                if (BackupStatus == BackupStatusConstants.CompletedWarning)
                 {
                     LogAction("Backup completed with warnings. See above for further details", false, true);
                     UpdateBackupStatus(BackupStatus);
                 }
                 else
                 {
-                    UpdateBackupStatus("Completed: Success");
+                    UpdateBackupStatus(BackupStatusConstants.CompletedSuccess);
                 }
                 LogAction($"Next backup scheduled for {NextBackup}", false, true);
-            })
-            {
-                Priority = ThreadPriority.Lowest
-            };
-            backupThread.Start();
+            });
         }
 
-
-        private void ProcessRepository(string repoPath)
+        private async Task ProcessRepositoryAsync(string repoPath)
         {
             string repoName = new DirectoryInfo(repoPath).Name;
             LogAction($"Processing repository: {repoName}");
 
-            string currentBranch = RunGitCommand("rev-parse --abbrev-ref HEAD", repoPath);
+            string currentBranch = await RunGitCommandAsync("rev-parse --abbrev-ref HEAD", repoPath);
             if (currentBranch == "main" || currentBranch == "master")
             {
                 LogAction($"Warning: Skipping repository \"{repoName}\" because it is set to the \"{currentBranch}\" branch.", false, true);
-                BackupStatus = "Completed: Warning";
+                BackupStatus = BackupStatusConstants.CompletedWarning;
                 return;
             }
 
-            if (!RemoteBranchExists(repoPath, currentBranch))
+            if (!await RemoteBranchExistsAsync(repoPath, currentBranch))
             {
                 DialogResult result = MessageBox.Show($"Branch \"{currentBranch}\" in \"{repoName}\" does not exist in the remote repository. Do you want to create it?", "Github Auto Backup: Branch Not Found", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (result == DialogResult.Yes)
                 {
-                    RunGitCommand($"push -u origin {currentBranch}", repoPath);
+                    await RunGitCommandAsync($"push -u origin {currentBranch}", repoPath);
                     LogAction($"Branch \"{currentBranch}\" in Repository \"{repoName}\" created in the remote repository.");
                 }
                 else
@@ -272,14 +382,14 @@ namespace Github_Auto_Backup
                 }
             }
 
-            RunGitCommand("add .", repoPath);
+            await RunGitCommandAsync("add .", repoPath);
 
             // Check if there are changes to commit
-            string statusOutput = RunGitCommand("status --porcelain", repoPath);
+            string statusOutput = await RunGitCommandAsync("status --porcelain", repoPath);
             bool hasChanges = !string.IsNullOrWhiteSpace(statusOutput);
             if (hasChanges)
             {
-                RunGitCommand("commit -m \"Auto Backup of working Github repositories\"", repoPath);
+                await RunGitCommandAsync("commit -m \"Auto Backup of working Github repositories\"", repoPath);
                 LogAction("Changes committed.");
             }
             else
@@ -289,13 +399,13 @@ namespace Github_Auto_Backup
 
             if (hasChanges)
             {
-                string remoteUrl = RunGitCommand("config --get remote.origin.url", repoPath);
-                string upstreamBranch = RunGitCommand("rev-parse --abbrev-ref --symbolic-full-name @{u}", repoPath);
+                string remoteUrl = await RunGitCommandAsync("config --get remote.origin.url", repoPath);
+                string upstreamBranch = await RunGitCommandAsync("rev-parse --abbrev-ref --symbolic-full-name @{u}", repoPath);
 
                 if (!string.IsNullOrWhiteSpace(remoteUrl) && !string.IsNullOrWhiteSpace(upstreamBranch))
                 {
                     LogAction($"Pushing repository: {repoName} on branch {currentBranch}");
-                    string pushOutput = RunGitCommand("push", repoPath);
+                    string pushOutput = await RunGitCommandAsync("push", repoPath);
                     if (!string.IsNullOrWhiteSpace(pushOutput))
                     {
                         LogAction($"Push output: {pushOutput}");
@@ -308,9 +418,9 @@ namespace Github_Auto_Backup
             }
         }
 
-        private bool RemoteBranchExists(string repoPath, string branchName)
+        private async Task<bool> RemoteBranchExistsAsync(string repoPath, string branchName)
         {
-            string result = RunGitCommand($"ls-remote --heads origin {branchName}", repoPath);
+            string result = await RunGitCommandAsync($"ls-remote --heads origin {branchName}", repoPath);
             return !string.IsNullOrWhiteSpace(result);
         }
 
@@ -319,7 +429,7 @@ namespace Github_Auto_Backup
             return Directory.Exists(Path.Combine(path, ".git"));
         }
 
-        string RunGitCommand(string command, string workingDirectory)
+        private async Task<string> RunGitCommandAsync(string command, string workingDirectory)
         {
             ProcessStartInfo psi = new()
             {
@@ -334,25 +444,35 @@ namespace Github_Auto_Backup
 
             using Process process = new() { StartInfo = psi };
             process.Start();
-            string output = process.StandardOutput.ReadToEnd().Trim();
-            string error = process.StandardError.ReadToEnd().Trim();
-            process.WaitForExit();
+            string output = await process.StandardOutput.ReadToEndAsync();
+            string error = await process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync();
 
             if (!string.IsNullOrWhiteSpace(error) && !error.Contains("To https://")) // Ignore standard push messages
             {
                 LogAction("Error: " + error);
             }
 
-            return output;
+            return output.Trim();
         }
 
         private void Backup_Timer_Tick(object sender, EventArgs e)
         {
             LastBackup_Text.Text = LastBackup;
             NextBackup_Text.Text = NextBackup;
+            LastBackup_toolStrip_TextBox.Text = LastBackup;
+            NextBackup_toolStrip_TextBox.Text = NextBackup;
+            if (!string.IsNullOrWhiteSpace(RepoLocation))
+            {
+                RunBack_Button.Enabled = true;
+            }
+            else
+            {
+                RunBack_Button.Enabled = false;
+            }
             if (!string.IsNullOrEmpty(NextBackup) && DateTime.Now > DateTime.Parse(NextBackup))
             {
-                RunBackup();
+                _ = RunBackupAsync();
             }
         }
 
@@ -383,11 +503,83 @@ namespace Github_Auto_Backup
                 MessageBox.Show($"An error occurred while opening the log file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         private async void ToolStripRunBackup_MenuItem_Click(object sender, EventArgs e)
         {
-            await Task.Run(() => RunBackup());
+            await RunBackupAsync();
+        }
 
+        private void LastBackup_toolStrip_TextBox_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void NextBackup_toolStrip_TextBox_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void ToolStripOpenForm_MenuItem_Click(object sender, EventArgs e)
+        {
+            Form1.ShowForm();
+            Properties.Settings.Default.FormVisibility = "Visible";
+            Properties.Settings.Default.Save();
+        }
+
+        private void ToolStripExit_MenuItem_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.Save();
+            Application.Exit();
+        }
+
+        private void BackupTime_Picker_ValueChanged(object sender, EventArgs e)
+        {
+            DateTime selectedTime = BackupTime_Picker.Value;
+            DateTime now = DateTime.Now;
+
+            // Calculate the next backup time based on the selected time
+            DateTime nextBackupTime = new(now.Year, now.Month, now.Day, selectedTime.Hour, selectedTime.Minute, selectedTime.Second);
+
+            // If the selected time is earlier in the day than the current time, set the next backup to the next day
+            if (nextBackupTime <= now)
+            {
+                nextBackupTime = nextBackupTime.AddDays(1);
+            }
+
+            NextBackup = nextBackupTime.ToString();
+            NextBackup_Text.Text = NextBackup;
+            BackupTime = selectedTime.ToString();
+            Properties.Settings.Default.BackupTime = BackupTime;
+            Properties.Settings.Default.NextBackup = NextBackup;
+            Properties.Settings.Default.Save();
+        }
+
+        private void BackUp_NotifyIcon_DoubleClick(object sender, EventArgs e)
+        {
+            Form1.ShowForm();
+            Properties.Settings.Default.FormVisibility = "Visible";
+            Properties.Settings.Default.Save();
+        }
+
+        private void Help_button_Click(object sender, EventArgs e)
+        {
+            string pdfPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Github-Auto-Backup-Manual.pdf");
+
+            try
+            {
+                if (File.Exists(pdfPath))
+                {
+                    Process.Start(new ProcessStartInfo(pdfPath) { UseShellExecute = true });
+                }
+                else
+                {
+                    MessageBox.Show("The manual PDF file could not be found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred while opening the manual: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }
