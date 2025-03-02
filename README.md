@@ -1,6 +1,3 @@
-
-![GITHUB AUTO BACKUP png](https://github.com/user-attachments/assets/f4b12878-6f50-412e-8c12-5e1906745466)
-
 # GitHub Auto Backup – Simple, Reliable, and Automatic  
 
 GitHub Auto Backup is a lightweight Windows application that automatically backs up your local repositories to GitHub. No more forgetting to push changes or losing progress—just set it up once, and it takes care of the rest.  
