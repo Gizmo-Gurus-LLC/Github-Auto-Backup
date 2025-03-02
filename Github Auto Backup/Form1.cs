@@ -54,6 +54,13 @@ namespace Github_Auto_Backup
         {
             try
             {
+                // Ensure the log directory exists
+                string? logDirectory = Path.GetDirectoryName(logFilePath);
+                if (logDirectory != null && !Directory.Exists(logDirectory))
+                {
+                    Directory.CreateDirectory(logDirectory);
+                }
+
                 using var writer = new StreamWriter(logFilePath, true);
                 if (addNewLines)
                 {
@@ -79,6 +86,7 @@ namespace Github_Auto_Backup
                 MessageBox.Show($"An error occurred while logging: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
 
         private void UpdateBackupStatus(string status)
         {
@@ -110,7 +118,7 @@ namespace Github_Auto_Backup
             BackupStatus_Text.Text = BackupStatus;
         }
 
-        public string logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Github Auto Backup.log");
+        public string logFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Github Auto Backup", "Github Auto Backup.log");
         public string? RepoLocation = Properties.Settings.Default.RepoLocation;
         public string? BackupInterval = Properties.Settings.Default.BackupInterval;
         public string? LastBackup = Properties.Settings.Default.LastBackup;
@@ -128,6 +136,16 @@ namespace Github_Auto_Backup
                 RunFirstTimeSetup();
                 Properties.Settings.Default.IsFirstRun = false;
                 Properties.Settings.Default.Save();
+            }
+
+            // Apply the saved form visibility state
+            if (Properties.Settings.Default.FormVisibility == "Hidden")
+            {
+                this.Hide();
+            }
+            else
+            {
+                this.Show();
             }
 
             RepoLocation_Text.Text = RepoLocation;
@@ -167,7 +185,6 @@ namespace Github_Auto_Backup
 
             isFormLoading = false;
         }
-
         private void RunFirstTimeSetup()
         {
             // Set the default backup interval
@@ -176,7 +193,7 @@ namespace Github_Auto_Backup
             BackupTime = BackupTime_Picker.Value.ToString();
             Properties.Settings.Default.Save();
 
-            MessageBox.Show(FirstRunMessage, "First Time Setup", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            //MessageBox.Show(FirstRunMessage, "First Time Setup", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void OpenFileExpl_Button_Click(object sender, EventArgs e)
@@ -199,10 +216,14 @@ namespace Github_Auto_Backup
                 e.Cancel = true;
 
                 // Hide the form instead of closing it
+                Properties.Settings.Default.FormVisibility = "Hidden";
+                Properties.Settings.Default.Save();
                 this.Hide();
             }
 
             SaveSettings();
+            //Properties.Settings.Default.FormVisibility = this.Visible ? "Visible" : "Hidden";
+            //Properties.Settings.Default.Save();
         }
 
         private void SaveSettings()
@@ -220,6 +241,8 @@ namespace Github_Auto_Backup
         {
             // Hide the form instead of closing it
             this.Hide();
+            Properties.Settings.Default.FormVisibility = "Hidden";
+            Properties.Settings.Default.Save();
         }
 
         private void RepoLocation_Text_TextChanged(object sender, EventArgs e)
@@ -499,10 +522,13 @@ namespace Github_Auto_Backup
         private void ToolStripOpenForm_MenuItem_Click(object sender, EventArgs e)
         {
             Form1.ShowForm();
+            Properties.Settings.Default.FormVisibility = "Visible";
+            Properties.Settings.Default.Save();
         }
 
         private void ToolStripExit_MenuItem_Click(object sender, EventArgs e)
         {
+            Properties.Settings.Default.Save();
             Application.Exit();
         }
 
@@ -531,6 +557,8 @@ namespace Github_Auto_Backup
         private void BackUp_NotifyIcon_DoubleClick(object sender, EventArgs e)
         {
             Form1.ShowForm();
+            Properties.Settings.Default.FormVisibility = "Visible";
+            Properties.Settings.Default.Save();
         }
 
         private void Help_button_Click(object sender, EventArgs e)
