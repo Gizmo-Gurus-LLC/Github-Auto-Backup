@@ -280,6 +280,8 @@ namespace Github_Auto_Backup
 
         private async Task RunBackupAsync()
         {
+            Backup_Timer.Stop();
+            RunBack_Button.Enabled = false;
             await Task.Run(async () =>
             {
                 try
@@ -357,6 +359,8 @@ namespace Github_Auto_Backup
                 }
                 LogAction($"Next backup scheduled for {NextBackup}", false, true);
             });
+            RunBack_Button.Enabled = true;
+            Backup_Timer.Start();
         }
 
         private async Task ProcessRepositoryAsync(string repoPath)
