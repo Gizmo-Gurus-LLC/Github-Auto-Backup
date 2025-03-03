@@ -2,8 +2,6 @@ namespace Github_Auto_Backup
 {
     public partial class Form1 : Form
     {
-        private const string FirstRunMessage = "Welcome to Github Auto Backup! This setup runs only once.\n\nGithub Auto Backup will now start automatically on Windows start";
-
         private readonly Dictionary<string, int> backupIntervalMapping = new()
         {
             { "Daily (Default)", 1440 }, // 1440 minutes in a day
@@ -28,14 +26,21 @@ namespace Github_Auto_Backup
         {
             InitializeComponent();
             BackupInterval_Combo.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.Load += Form1_Load; // Ensure the Load event is properly hooked
         }
-
         public static void ShowForm()
         {
             if (form1Instance == null || form1Instance.IsDisposed)
             {
                 form1Instance = new Form1();
-                form1Instance.Show();
+                if (Properties.Settings.Default.FormVisibility == "Hidden")
+                {
+                    form1Instance.Hide();
+                }
+                else
+                {
+                    form1Instance.Show();
+                }
             }
             else
             {
@@ -126,7 +131,7 @@ namespace Github_Auto_Backup
         public string? BackupTime = Properties.Settings.Default.BackupTime;
         public string? BackupStatus = Properties.Settings.Default.BackupStatus;
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void Form1_Load(object? sender, EventArgs e)
         {
             isFormLoading = true;
 
@@ -185,15 +190,15 @@ namespace Github_Auto_Backup
 
             isFormLoading = false;
         }
+
         private void RunFirstTimeSetup()
         {
             // Set the default backup interval
             BackupInterval = "Daily (Default)";
             Properties.Settings.Default.BackupInterval = BackupInterval;
+            Properties.Settings.Default.FormVisibility = "Hidden";
             BackupTime = BackupTime_Picker.Value.ToString();
             Properties.Settings.Default.Save();
-
-            //MessageBox.Show(FirstRunMessage, "First Time Setup", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void OpenFileExpl_Button_Click(object sender, EventArgs e)
