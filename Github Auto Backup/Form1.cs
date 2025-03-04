@@ -26,6 +26,54 @@ namespace Github_Auto_Backup
         {
             InitializeComponent();
             BackupInterval_Combo.DropDownStyle = ComboBoxStyle.DropDownList;
+
+            // Initialize variables
+            RepoLocation_Text.Text = RepoLocation;
+            BackupInterval_Combo.Text = BackupInterval;
+            BackupTime_Picker.Text = BackupTime;
+            LastBackup_Text.Text = LastBackup;
+            NextBackup_Text.Text = NextBackup;
+
+            // Start the timer
+            Backup_Timer.Start();
+
+            // Check if it's the first run
+            if (Properties.Settings.Default.IsFirstRun)
+            {
+                RunFirstTimeSetup();
+                Properties.Settings.Default.IsFirstRun = false;
+                Properties.Settings.Default.Save();
+            }
+
+            // Check if BackupInterval is null or empty and set a default value if it is
+            if (string.IsNullOrEmpty(BackupInterval))
+            {
+                BackupInterval = "Daily (Default)";
+                Properties.Settings.Default.BackupInterval = BackupInterval;
+                Properties.Settings.Default.Save();
+            }
+
+            // Check if BackupStatus is null and set a default value if it is
+            if (string.IsNullOrEmpty(BackupStatus))
+            {
+                BackupStatus = BackupStatusConstants.NotRunning;
+            }
+            BackupStatus_Text.Text = BackupStatus;
+            UpdateBackupStatus(BackupStatus); // Call UpdateBackupStatus with BackupStatus
+
+            if (!string.IsNullOrEmpty(BackupInterval))
+            {
+                int Backup_Index = BackupInterval_Combo.Items.IndexOf(BackupInterval);
+                if (Backup_Index != -1)
+                {
+                    BackupInterval_Combo.SelectedIndex = Backup_Index;
+                }
+            }
+            else if (BackupInterval_Combo.Items.Count > 0)
+            {
+                BackupInterval_Combo.SelectedIndex = 0;
+            }
+
             this.Load += Form1_Load; // Ensure the Load event is properly hooked
         }
         public static void ShowForm()
@@ -135,14 +183,6 @@ namespace Github_Auto_Backup
         {
             isFormLoading = true;
 
-            // Check if it's the first run
-            if (Properties.Settings.Default.IsFirstRun)
-            {
-                RunFirstTimeSetup();
-                Properties.Settings.Default.IsFirstRun = false;
-                Properties.Settings.Default.Save();
-            }
-
             // Apply the saved form visibility state
             if (Properties.Settings.Default.FormVisibility == "Hidden")
             {
@@ -153,44 +193,8 @@ namespace Github_Auto_Backup
                 this.Show();
             }
 
-            RepoLocation_Text.Text = RepoLocation;
-            BackupInterval_Combo.Text = BackupInterval;
-            BackupTime_Picker.Text = BackupTime;
-            LastBackup_Text.Text = LastBackup;
-            NextBackup_Text.Text = NextBackup;
-
-            // Check if BackupInterval is null or empty and set a default value if it is
-            if (string.IsNullOrEmpty(BackupInterval))
-            {
-                BackupInterval = "Daily (Default)";
-                Properties.Settings.Default.BackupInterval = BackupInterval;
-                Properties.Settings.Default.Save();
-            }
-
-            // Check if BackupStatus is null and set a default value if it is
-            if (string.IsNullOrEmpty(BackupStatus))
-            {
-                BackupStatus = BackupStatusConstants.NotRunning;
-            }
-            BackupStatus_Text.Text = BackupStatus;
-            UpdateBackupStatus(BackupStatus); // Call UpdateBackupStatus with BackupStatus
-            Backup_Timer.Start();
-            if (!string.IsNullOrEmpty(BackupInterval))
-            {
-                int Backup_Index = BackupInterval_Combo.Items.IndexOf(BackupInterval);
-                if (Backup_Index != -1)
-                {
-                    BackupInterval_Combo.SelectedIndex = Backup_Index;
-                }
-            }
-            else if (BackupInterval_Combo.Items.Count > 0)
-            {
-                BackupInterval_Combo.SelectedIndex = 0;
-            }
-
             isFormLoading = false;
         }
-
         private void RunFirstTimeSetup()
         {
             // Set the default backup interval
